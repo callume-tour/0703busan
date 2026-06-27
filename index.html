@@ -33,6 +33,9 @@
     .hide-scroll::-webkit-scrollbar { display: none; }
     .anchor { scroll-margin-top: 96px; }
     .check-item input:checked + span { color: #64748b; text-decoration: line-through; }
+    details > summary { list-style: none; }
+    details > summary::-webkit-details-marker { display: none; }
+    details[open] .chevron { transform: rotate(180deg); }
   </style>
 </head>
 <body class="pb-24 lg:pb-0">
@@ -60,7 +63,7 @@
       <div class="mx-auto grid max-w-7xl gap-5 px-4 py-5 lg:grid-cols-[1.16fr_.84fr] lg:px-8 lg:py-8">
         <div class="overflow-hidden rounded-[28px] bg-white shadow-soft">
           <div class="relative min-h-[430px] lg:min-h-[580px]">
-            <img src="images/hero-busan.jpg" alt="釜山旅遊主視覺" class="absolute inset-0 h-full w-full object-cover" />
+            <img src="images/home-header.png" alt="釜山旅遊首頁頭標" class="absolute inset-0 h-full w-full object-cover" />
             <div class="absolute inset-0 bg-gradient-to-t from-slate-950/72 via-slate-900/18 to-transparent"></div>
             <div class="absolute bottom-0 left-0 right-0 p-6 text-white lg:p-8">
               <p class="mb-3 inline-flex items-center gap-2 rounded-full bg-white/18 px-3 py-1 text-xs font-semibold glass">
@@ -231,16 +234,73 @@
         <p class="text-sm font-black text-fuji">PAGE 2</p>
         <h2 class="text-3xl font-black lg:text-4xl">注意事項</h2>
       </div>
-      <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        <div class="rounded-[22px] bg-white p-4 shadow-soft"><b>1. 行李重量：</b>托運行李以 1 大件合計不超過 20 公斤、手提行李 1 小件合計不超過 10 公斤為原則。</div>
-        <div class="rounded-[22px] bg-white p-4 shadow-soft"><b>2. 廉航服務：</b>廉價航空無提供機上餐食、毛毯、水與其他機上服務，請自行攜帶。</div>
-        <div class="rounded-[22px] bg-white p-4 shadow-soft"><b>3. 行動電源：</b>必須隨身上機，單獨放入透明夾鏈袋，並做好防短路措施。</div>
-        <div class="rounded-[22px] bg-white p-4 shadow-soft"><b>4. 韓國電壓：</b>韓國為 220-240V，請自備變壓器及萬用插頭。</div>
-        <div class="rounded-[22px] bg-white p-4 shadow-soft"><b>5. 入境申報：</b>免稅香煙 200 支、酒 1 瓶；外幣與貴重物品須詳細填寫。</div>
-        <div class="rounded-[22px] bg-white p-4 shadow-soft"><b>6. 盥洗用品：</b>部分酒店不提供個人盥洗用具，牙刷、牙膏等請自行攜帶。</div>
-        <div class="rounded-[22px] bg-white p-4 shadow-soft"><b>7. 保險提醒：</b>已投保履約責任險 250 萬及意外醫療險 20 萬；建議自行投保旅平險。</div>
-        <div class="rounded-[22px] bg-white p-4 shadow-soft"><b>8. 返國限制：</b>不可攜帶任何形式肉製品，真空包裝也不可，亦不可攜帶蔬果。</div>
-        <div class="rounded-[22px] bg-white p-4 shadow-soft"><b>9. 行程調整：</b>若受航班、天候、交通等因素影響，得依實際狀況調整順序。</div>
+      <div class="grid gap-3 lg:grid-cols-2">
+        <details class="rounded-[22px] bg-white shadow-soft" open>
+          <summary class="flex cursor-pointer items-center justify-between gap-3 p-4">
+            <span class="font-black"><i class="fa-solid fa-suitcase mr-2 text-fuji"></i>必備物品與通關</span>
+            <i class="fa-solid fa-chevron-down chevron text-slate-400 transition"></i>
+          </summary>
+          <div class="space-y-2 border-t border-slate-100 p-4 pt-3 text-sm text-slate-600">
+            <p><b>攜帶外幣：</b>每人美金現金不得超過 10,000 元；新台幣現金不得超過 60,000 元。</p>
+            <p><b>金飾提醒：</b>韓國對金飾、金錶、項鍊等金質物品管制較嚴，非必要建議少帶。</p>
+            <p><b>參考匯率：</b>1 美元約 1400-1600 韓幣；1 台幣約 42-47 韓幣，實際以當日銀行公告為準。</p>
+            <p><b>自備用品：</b>毛巾、牙刷、牙膏、沐浴乳、洗髮精、香皂、拖鞋與個人藥品請自行準備。</p>
+            <p><b>返台限制：</b><span class="font-bold text-red-600">生鮮蔬果與任何形式肉製品不可帶回台灣。</span></p>
+          </div>
+        </details>
+
+        <details class="rounded-[22px] bg-white shadow-soft">
+          <summary class="flex cursor-pointer items-center justify-between gap-3 p-4">
+            <span class="font-black"><i class="fa-solid fa-plane mr-2 text-fuji"></i>航班與行李規定</span>
+            <i class="fa-solid fa-chevron-down chevron text-slate-400 transition"></i>
+          </summary>
+          <div class="space-y-2 border-t border-slate-100 p-4 pt-3 text-sm text-slate-600">
+            <p><b>團體機票：</b>須團去團回，無法加價升等商務艙；若需提前出發或延後返國，請自行開立個人機票。</p>
+            <p><b>座位安排：</b>由航空公司統一安排，同行者不一定相鄰，也無法指定靠窗或走道。</p>
+            <p><b>易斯達航空 ZE：</b>託運總重量 20kg；手提 10kg × 1 件，單件上限 55×40×20cm。</p>
+            <p><b>廉航餐食：</b>機上無餐食、毛毯與水，請依需求自行準備。</p>
+            <p><b>行動電源：</b>必須隨身上機，建議單獨放入透明夾鏈袋並做好防短路措施。</p>
+          </div>
+        </details>
+
+        <details class="rounded-[22px] bg-white shadow-soft">
+          <summary class="flex cursor-pointer items-center justify-between gap-3 p-4">
+            <span class="font-black"><i class="fa-solid fa-passport mr-2 text-fuji"></i>簽證與保險</span>
+            <i class="fa-solid fa-chevron-down chevron text-slate-400 transition"></i>
+          </summary>
+          <div class="space-y-2 border-t border-slate-100 p-4 pt-3 text-sm text-slate-600">
+            <p><b>包團提醒：</b>本團為包團行程，不用再另外付導遊、司機小費，也不用另外辦線上簽證。</p>
+            <p><b>保險提醒：</b>已投保履約責任險 500 萬及意外醫療險 20 萬；仍建議自行投保旅遊平安險。</p>
+            <p><b>行程調整：</b>若遇航班、天候、交通、食宿等不可抗力因素，將在內容不減原則下調整順序。</p>
+          </div>
+        </details>
+
+        <details class="rounded-[22px] bg-white shadow-soft">
+          <summary class="flex cursor-pointer items-center justify-between gap-3 p-4">
+            <span class="font-black"><i class="fa-solid fa-utensils mr-2 text-fuji"></i>食衣住行須知</span>
+            <i class="fa-solid fa-chevron-down chevron text-slate-400 transition"></i>
+          </summary>
+          <div class="space-y-2 border-t border-slate-100 p-4 pt-3 text-sm text-slate-600">
+            <p><b>食：</b>韓國口味偏鹹辣、配菜多為冷食；不習慣者可自備泡麵、乾糧或素食備品。</p>
+            <p><b>衣：</b>7 月天氣炎熱且易下雨，建議短袖、輕便褲裙、薄外套、防曬與雨具。</p>
+            <p><b>住：</b>韓國飯店響應環保，多不提供一次性備品，請自備牙刷、牙膏、洗沐用品與拖鞋。</p>
+            <p><b>電壓：</b>韓國為 220-240V，插座與台灣不同，請自備萬用插頭與適用電壓用品。</p>
+            <p><b>行：</b>請準時集合上車、保持車內整潔；韓國大型車停車逾 3 分鐘需熄火，請見諒。</p>
+          </div>
+        </details>
+
+        <details class="rounded-[22px] bg-white shadow-soft lg:col-span-2">
+          <summary class="flex cursor-pointer items-center justify-between gap-3 p-4">
+            <span class="font-black"><i class="fa-solid fa-shield-halved mr-2 text-fuji"></i>活動、購物與特產</span>
+            <i class="fa-solid fa-chevron-down chevron text-slate-400 transition"></i>
+          </summary>
+          <div class="grid gap-2 border-t border-slate-100 p-4 pt-3 text-sm text-slate-600 md:grid-cols-2">
+            <p><b>汗蒸幕：</b>若行程安排汗蒸幕，通常會提供毛巾與運動服；韓國溫泉多為裸湯。</p>
+            <p><b>購物：</b>若看到喜歡且價格合適的物品，請自行衡量時間與預算，避免影響行程。</p>
+            <p><b>免稅煙酒：</b>機上或當地免稅店可購買煙、酒，規範仍以海關與現場公告為準。</p>
+            <p><b>特產：</b>人蔘、人蔘精、紫水晶、皮衣、毛衣與寒帶水果常見，但生鮮蔬果不能帶回台灣。</p>
+          </div>
+        </details>
       </div>
     </section>
 
