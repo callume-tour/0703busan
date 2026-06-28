@@ -62,7 +62,7 @@
         </p>
         <h1 class="text-4xl font-black leading-tight lg:text-5xl">旅費分帳</h1>
         <p class="mt-3 max-w-2xl text-slate-600">輸入誰付款、哪些人一起分攤，系統會自動算出每個人的餘額與最後誰該轉給誰。</p>
-        <div class="mt-5 grid gap-3 sm:grid-cols-3">
+        <div class="mt-5 grid gap-3 sm:grid-cols-4">
           <div class="rounded-2xl bg-sea/70 p-4">
             <p class="text-xs text-slate-500">總支出</p>
             <p id="totalAmount" class="mt-1 text-2xl font-black text-fuji">NT$0</p>
@@ -74,6 +74,10 @@
           <div class="rounded-2xl bg-warm p-4">
             <p class="text-xs text-slate-500">支出筆數</p>
             <p id="expenseCount" class="mt-1 text-2xl font-black text-fuji">0 筆</p>
+          </div>
+          <div class="rounded-2xl bg-foam p-4">
+            <p class="text-xs text-slate-500">同步</p>
+            <p id="syncStatus" class="mt-1 text-sm font-black text-fuji">連線中</p>
           </div>
         </div>
       </div>
@@ -183,25 +187,55 @@
     </div>
   </nav>
 
-  <script>
-    const storageKey = 'busan-expenses-v1';
-    const defaultState = {
-      members: [
-        { id: crypto.randomUUID(), name: '我' },
-        { id: crypto.randomUUID(), name: '同行者A' },
-        { id: crypto.randomUUID(), name: '同行者B' }
-      ],
-      expenses: []
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
+    import {
+      getFirestore,
+      collection,
+      doc,
+      setDoc,
+      deleteDoc,
+      getDocs,
+      onSnapshot,
+      writeBatch
+    } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: 'AIzaSyCJ1QYWUJKiB-mv5tYDK2EV6845BeTxD0Q',
+      authDomain: 'busan-f3b64.firebaseapp.com',
+      projectId: 'busan-f3b64',
+      storageBucket: 'busan-f3b64.firebasestorage.app',
+      messagingSenderId: '744928261817',
+      appId: '1:744928261817:web:62602fac58c0a9e0cccd68',
+      measurementId: 'G-6QD3GRK4FX'
     };
 
-    let state = loadState();
+    const tourId = '0703busan';
+    const localBackupKey = 'busan-expenses-firebase-backup-v1';
+    const defaultMembers = [
+      { id: 'me', name: '我' },
+      { id: 'friend-a', name: '同行者A' },
+      { id: 'friend-b', name: '同行者B' }
+    ];
+    const defaultState = { members: defaultMembers, expenses: [] };
+    let state = loadBackup();
+    let db;
+    let membersRef;
+    let expensesRef;
+    let seededDefaults = false;
 
     const fmt = new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 0 });
     const money = (value) => `NT$${fmt.format(Math.round(value || 0))}`;
     const byId = (id) => state.members.find((m) => m.id === id);
+    const syncStatus = document.getElementById('syncStatus');
 
-    function loadState() {
-      const raw = localStorage.getItem(storageKey);
+    function setSyncStatus(text, tone = 'text-fuji') {
+      syncStatus.className = `mt-1 text-sm font-black ${tone}`;
+      syncStatus.textContent = text;
+    }
+
+    function loadBackup() {
+      const raw = localStorage.getItem(localBackupKey);
       if (!raw) return structuredClone(defaultState);
       try {
         const parsed = JSON.parse(raw);
@@ -212,8 +246,8 @@
       }
     }
 
-    function saveState() {
-      localStorage.setItem(storageKey, JSON.stringify(state));
+    function saveBackup() {
+      localStorage.setItem(localBackupKey, JSON.stringify(state));
     }
 
     function convertedAmount(expense) {
@@ -327,7 +361,7 @@
       renderMembers();
       renderSummary();
       renderRecords();
-      saveState();
+      saveBackup();
     }
 
     function escapeHtml(value) {
@@ -358,7 +392,7 @@
         return;
       }
       const currency = document.getElementById('currency').value;
-      state.expenses.push({
+      const expense = {
         id: crypto.randomUUID(),
         date: document.getElementById('expenseDate').value,
         title: document.getElementById('title').value.trim(),
@@ -369,27 +403,25 @@
         payerId: document.getElementById('payer').value,
         splitterIds,
         note: document.getElementById('note').value.trim()
-      });
+      };
+      saveExpense(expense);
       event.target.reset();
       document.getElementById('expenseDate').valueAsDate = new Date();
       document.getElementById('rate').value = '1';
-      renderAll();
     });
 
     document.getElementById('memberForm').addEventListener('submit', (event) => {
       event.preventDefault();
       const name = document.getElementById('memberName').value.trim();
       if (!name) return;
-      state.members.push({ id: crypto.randomUUID(), name });
+      saveMember({ id: crypto.randomUUID(), name });
       document.getElementById('memberName').value = '';
-      renderAll();
     });
 
     document.addEventListener('click', (event) => {
       const expenseBtn = event.target.closest('.delete-expense');
       if (expenseBtn) {
-        state.expenses = state.expenses.filter((e) => e.id !== expenseBtn.dataset.id);
-        renderAll();
+        deleteExpense(expenseBtn.dataset.id);
       }
       const memberBtn = event.target.closest('.delete-member');
       if (memberBtn) {
@@ -397,8 +429,7 @@
         const id = memberBtn.dataset.id;
         const used = state.expenses.some((e) => e.payerId === id || e.splitterIds?.includes(id));
         if (used) return alert('這位成員已有分帳紀錄，請先刪除相關支出');
-        state.members = state.members.filter((m) => m.id !== id);
-        renderAll();
+        deleteMember(id);
       }
     });
 
@@ -417,16 +448,106 @@
       if (!file) return;
       const imported = JSON.parse(await file.text());
       if (!imported.members || !imported.expenses) return alert('檔案格式不正確');
-      state = imported;
-      renderAll();
+      await importState(imported);
     });
 
     document.getElementById('resetBtn').addEventListener('click', () => {
       if (!confirm('確定要清空本機分帳資料嗎？')) return;
-      state = structuredClone(defaultState);
-      renderAll();
+      resetRemoteData();
     });
 
+    async function saveMember(member) {
+      state.members = [...state.members.filter((m) => m.id !== member.id), member];
+      renderAll();
+      if (!membersRef) return;
+      await setDoc(doc(membersRef, member.id), member);
+    }
+
+    async function deleteMember(id) {
+      state.members = state.members.filter((m) => m.id !== id);
+      renderAll();
+      if (!membersRef) return;
+      await deleteDoc(doc(membersRef, id));
+    }
+
+    async function saveExpense(expense) {
+      state.expenses = [...state.expenses.filter((e) => e.id !== expense.id), expense];
+      renderAll();
+      if (!expensesRef) return;
+      await setDoc(doc(expensesRef, expense.id), expense);
+    }
+
+    async function deleteExpense(id) {
+      state.expenses = state.expenses.filter((e) => e.id !== id);
+      renderAll();
+      if (!expensesRef) return;
+      await deleteDoc(doc(expensesRef, id));
+    }
+
+    async function importState(imported) {
+      state = imported;
+      renderAll();
+      if (!db) return;
+      const batch = writeBatch(db);
+      const oldMembers = await getDocs(membersRef);
+      const oldExpenses = await getDocs(expensesRef);
+      oldMembers.forEach((snap) => batch.delete(snap.ref));
+      oldExpenses.forEach((snap) => batch.delete(snap.ref));
+      imported.members.forEach((member) => batch.set(doc(membersRef, member.id), member));
+      imported.expenses.forEach((expense) => batch.set(doc(expensesRef, expense.id), expense));
+      await batch.commit();
+    }
+
+    async function resetRemoteData() {
+      state = structuredClone(defaultState);
+      renderAll();
+      if (!db) return;
+      const batch = writeBatch(db);
+      const oldMembers = await getDocs(membersRef);
+      const oldExpenses = await getDocs(expensesRef);
+      oldMembers.forEach((snap) => batch.delete(snap.ref));
+      oldExpenses.forEach((snap) => batch.delete(snap.ref));
+      defaultMembers.forEach((member) => batch.set(doc(membersRef, member.id), member));
+      await batch.commit();
+    }
+
+    function connectFirebase() {
+      try {
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        membersRef = collection(db, 'tours', tourId, 'expenseMembers');
+        expensesRef = collection(db, 'tours', tourId, 'expenses');
+
+        onSnapshot(membersRef, async (snapshot) => {
+          state.members = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+          if (!state.members.length && !seededDefaults) {
+            seededDefaults = true;
+            await Promise.all(defaultMembers.map((member) => setDoc(doc(membersRef, member.id), member)));
+            return;
+          }
+          state.members.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'));
+          renderAll();
+          setSyncStatus('Firebase 已同步');
+        }, (error) => {
+          console.error(error);
+          setSyncStatus('Firebase 讀取失敗', 'text-red-600');
+        });
+
+        onSnapshot(expensesRef, (snapshot) => {
+          state.expenses = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+          renderAll();
+          setSyncStatus('Firebase 已同步');
+        }, (error) => {
+          console.error(error);
+          setSyncStatus('Firebase 讀取失敗', 'text-red-600');
+        });
+      } catch (error) {
+        console.error(error);
+        setSyncStatus('離線備援', 'text-red-600');
+      }
+    }
+
+    connectFirebase();
     renderAll();
   </script>
 </body>
