@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>釜山五日遊分帳 | 乾杯釜山</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            fuji: '#3B7AAE',
+            alice: '#F0F8FF',
+            sea: '#DCECF7',
+            foam: '#F8FBFD',
+            warm: '#E9E1D6',
+            ink: '#25313B'
+          },
+          boxShadow: {
+            soft: '0 18px 42px rgba(37,49,59,.12)',
+            float: '0 12px 30px rgba(59,122,174,.22)'
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    html { scroll-behavior: smooth; }
+    body { min-height: 100vh; background: #F0F8FF; color: #25313B; }
+    .glass { backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+    .anchor { scroll-margin-top: 90px; }
+    input, select, textarea { outline: none; }
+  </style>
+</head>
+<body class="pb-24 lg:pb-0">
+  <header class="sticky top-0 z-40 border-b border-white/70 bg-alice/88 glass">
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8">
+      <a href="index.html" class="flex items-center gap-3">
+        <span class="grid h-10 w-10 place-items-center rounded-2xl bg-fuji text-white shadow-float"><i class="fa-solid fa-receipt"></i></span>
+        <div>
+          <p class="text-sm font-black text-fuji">釜山五日遊分帳</p>
+          <p class="text-xs text-slate-500">共同支出 · 自動結算</p>
+        </div>
+      </a>
+      <nav class="hidden items-center gap-2 text-sm font-black text-slate-600 lg:flex">
+        <a href="index.html" class="rounded-full px-4 py-2 hover:bg-white hover:text-fuji">行程首頁</a>
+        <a href="#summary" class="rounded-full px-4 py-2 hover:bg-white hover:text-fuji">總覽</a>
+        <a href="#add" class="rounded-full px-4 py-2 hover:bg-white hover:text-fuji">新增支出</a>
+        <a href="#records" class="rounded-full px-4 py-2 hover:bg-white hover:text-fuji">紀錄</a>
+        <a href="#members" class="rounded-full px-4 py-2 hover:bg-white hover:text-fuji">成員</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-7xl px-4 py-5 lg:px-8 lg:py-8">
+    <section class="grid gap-5 lg:grid-cols-[1.05fr_.95fr]">
+      <div class="rounded-[28px] bg-white p-5 shadow-soft lg:p-7">
+        <p class="mb-3 inline-flex items-center gap-2 rounded-full bg-fuji/10 px-3 py-1 text-xs font-bold text-fuji">
+          <i class="fa-solid fa-won-sign"></i> Busan Split
+        </p>
+        <h1 class="text-4xl font-black leading-tight lg:text-5xl">旅費分帳</h1>
+        <p class="mt-3 max-w-2xl text-slate-600">輸入誰付款、哪些人一起分攤，系統會自動算出每個人的餘額與最後誰該轉給誰。</p>
+        <div class="mt-5 grid gap-3 sm:grid-cols-3">
+          <div class="rounded-2xl bg-sea/70 p-4">
+            <p class="text-xs text-slate-500">總支出</p>
+            <p id="totalAmount" class="mt-1 text-2xl font-black text-fuji">NT$0</p>
+          </div>
+          <div class="rounded-2xl bg-foam p-4">
+            <p class="text-xs text-slate-500">成員</p>
+            <p id="memberCount" class="mt-1 text-2xl font-black text-fuji">0 人</p>
+          </div>
+          <div class="rounded-2xl bg-warm p-4">
+            <p class="text-xs text-slate-500">支出筆數</p>
+            <p id="expenseCount" class="mt-1 text-2xl font-black text-fuji">0 筆</p>
+          </div>
+        </div>
+      </div>
+
+      <section id="summary" class="anchor rounded-[28px] bg-white p-5 shadow-soft lg:p-7">
+        <h2 class="mb-4 text-2xl font-black"><i class="fa-solid fa-scale-balanced mr-2 text-fuji"></i>結算建議</h2>
+        <div id="settlements" class="space-y-2 text-sm"></div>
+      </section>
+    </section>
+
+    <section class="mt-5 grid gap-5 lg:grid-cols-[.95fr_1.05fr]">
+      <section id="add" class="anchor rounded-[28px] bg-white p-5 shadow-soft lg:p-7">
+        <h2 class="mb-4 text-2xl font-black"><i class="fa-solid fa-plus mr-2 text-fuji"></i>新增支出</h2>
+        <form id="expenseForm" class="grid gap-3">
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="grid gap-1 text-sm font-bold">日期
+              <input id="expenseDate" type="date" class="rounded-2xl bg-foam px-4 py-3 font-medium" />
+            </label>
+            <label class="grid gap-1 text-sm font-bold">分類
+              <select id="category" class="rounded-2xl bg-foam px-4 py-3 font-medium">
+                <option>餐食</option>
+                <option>交通</option>
+                <option>門票</option>
+                <option>購物</option>
+                <option>咖啡點心</option>
+                <option>住宿</option>
+                <option>其他</option>
+              </select>
+            </label>
+          </div>
+          <label class="grid gap-1 text-sm font-bold">項目名稱
+            <input id="title" type="text" placeholder="例：烤肉晚餐、計程車、咖啡" class="rounded-2xl bg-foam px-4 py-3 font-medium" required />
+          </label>
+          <div class="grid gap-3 sm:grid-cols-[1fr_.7fr_.8fr]">
+            <label class="grid gap-1 text-sm font-bold">金額
+              <input id="amount" type="number" min="0" step="0.01" placeholder="0" class="rounded-2xl bg-foam px-4 py-3 font-medium" required />
+            </label>
+            <label class="grid gap-1 text-sm font-bold">幣別
+              <select id="currency" class="rounded-2xl bg-foam px-4 py-3 font-medium">
+                <option value="TWD" data-rate="1">TWD</option>
+                <option value="KRW" data-rate="0.023">KRW</option>
+                <option value="USD" data-rate="32">USD</option>
+              </select>
+            </label>
+            <label class="grid gap-1 text-sm font-bold">換算台幣匯率
+              <input id="rate" type="number" min="0" step="0.0001" value="1" class="rounded-2xl bg-foam px-4 py-3 font-medium" />
+            </label>
+          </div>
+          <label class="grid gap-1 text-sm font-bold">付款人
+            <select id="payer" class="rounded-2xl bg-foam px-4 py-3 font-medium"></select>
+          </label>
+          <div>
+            <div class="mb-2 flex items-center justify-between">
+              <p class="text-sm font-bold">分攤對象</p>
+              <button id="selectAllSplitters" type="button" class="rounded-full bg-sea px-3 py-1 text-xs font-black text-fuji">全選</button>
+            </div>
+            <div id="splitters" class="grid gap-2 sm:grid-cols-2"></div>
+          </div>
+          <label class="grid gap-1 text-sm font-bold">備註
+            <textarea id="note" rows="2" placeholder="可留空" class="rounded-2xl bg-foam px-4 py-3 font-medium"></textarea>
+          </label>
+          <button class="rounded-2xl bg-fuji px-4 py-3 font-black text-white shadow-float" type="submit">
+            <i class="fa-solid fa-check mr-2"></i>儲存支出
+          </button>
+        </form>
+      </section>
+
+      <section class="rounded-[28px] bg-white p-5 shadow-soft lg:p-7">
+        <h2 class="mb-4 text-2xl font-black"><i class="fa-solid fa-chart-simple mr-2 text-fuji"></i>每人餘額</h2>
+        <div id="balances" class="space-y-2"></div>
+      </section>
+    </section>
+
+    <section id="records" class="anchor mt-5 rounded-[28px] bg-white p-5 shadow-soft lg:p-7">
+      <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 class="text-2xl font-black"><i class="fa-solid fa-list mr-2 text-fuji"></i>支出紀錄</h2>
+        <div class="flex gap-2">
+          <button id="exportBtn" class="rounded-full bg-foam px-4 py-2 text-sm font-black text-fuji" type="button"><i class="fa-solid fa-download mr-1"></i>匯出</button>
+          <label class="cursor-pointer rounded-full bg-foam px-4 py-2 text-sm font-black text-fuji"><i class="fa-solid fa-upload mr-1"></i>匯入
+            <input id="importFile" type="file" accept="application/json" class="hidden" />
+          </label>
+        </div>
+      </div>
+      <div id="recordsList" class="grid gap-3 lg:grid-cols-2"></div>
+    </section>
+
+    <section id="members" class="anchor mt-5 rounded-[28px] bg-white p-5 shadow-soft lg:p-7">
+      <h2 class="mb-4 text-2xl font-black"><i class="fa-solid fa-users mr-2 text-fuji"></i>成員管理</h2>
+      <form id="memberForm" class="mb-4 flex gap-2">
+        <input id="memberName" type="text" placeholder="新增成員姓名" class="min-w-0 flex-1 rounded-2xl bg-foam px-4 py-3 font-medium" required />
+        <button class="rounded-2xl bg-fuji px-4 py-3 font-black text-white" type="submit">新增</button>
+      </form>
+      <div id="membersList" class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3"></div>
+      <button id="resetBtn" class="mt-5 rounded-full bg-red-50 px-4 py-2 text-sm font-black text-red-600" type="button">
+        <i class="fa-solid fa-trash-can mr-1"></i>清空本機分帳資料
+      </button>
+    </section>
+  </main>
+
+  <nav class="fixed bottom-4 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-[24px] bg-white/88 p-2 shadow-float glass lg:hidden">
+    <div class="grid grid-cols-5 gap-1 text-[11px] font-black text-slate-500">
+      <a href="index.html" class="flex flex-col items-center gap-1 rounded-2xl px-2 py-2"><i class="fa-solid fa-house text-base"></i>首頁</a>
+      <a href="#summary" class="flex flex-col items-center gap-1 rounded-2xl px-2 py-2 text-fuji"><i class="fa-solid fa-scale-balanced text-base"></i>總覽</a>
+      <a href="#add" class="flex flex-col items-center gap-1 rounded-2xl px-2 py-2"><i class="fa-solid fa-plus text-base"></i>新增</a>
+      <a href="#records" class="flex flex-col items-center gap-1 rounded-2xl px-2 py-2"><i class="fa-solid fa-list text-base"></i>紀錄</a>
+      <a href="#members" class="flex flex-col items-center gap-1 rounded-2xl px-2 py-2"><i class="fa-solid fa-users text-base"></i>成員</a>
+    </div>
+  </nav>
+
+  <script>
+    const storageKey = 'busan-expenses-v1';
+    const defaultState = {
+      members: [
+        { id: crypto.randomUUID(), name: '我' },
+        { id: crypto.randomUUID(), name: '同行者A' },
+        { id: crypto.randomUUID(), name: '同行者B' }
+      ],
+      expenses: []
+    };
+
+    let state = loadState();
+
+    const fmt = new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 0 });
+    const money = (value) => `NT$${fmt.format(Math.round(value || 0))}`;
+    const byId = (id) => state.members.find((m) => m.id === id);
+
+    function loadState() {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return structuredClone(defaultState);
+      try {
+        const parsed = JSON.parse(raw);
+        if (!parsed.members?.length) return structuredClone(defaultState);
+        return parsed;
+      } catch {
+        return structuredClone(defaultState);
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    }
+
+    function convertedAmount(expense) {
+      return Number(expense.amount || 0) * Number(expense.rate || 1);
+    }
+
+    function calculate() {
+      const totals = Object.fromEntries(state.members.map((m) => [m.id, { paid: 0, share: 0, net: 0 }]));
+      for (const expense of state.expenses) {
+        const value = convertedAmount(expense);
+        if (!totals[expense.payerId]) continue;
+        totals[expense.payerId].paid += value;
+        const splitters = expense.splitterIds?.filter((id) => totals[id]) || [];
+        if (!splitters.length) continue;
+        const share = value / splitters.length;
+        for (const id of splitters) totals[id].share += share;
+      }
+      for (const id of Object.keys(totals)) totals[id].net = totals[id].paid - totals[id].share;
+
+      const creditors = Object.entries(totals).filter(([, v]) => v.net > 0.5).map(([id, v]) => ({ id, amount: v.net }));
+      const debtors = Object.entries(totals).filter(([, v]) => v.net < -0.5).map(([id, v]) => ({ id, amount: -v.net }));
+      const settlements = [];
+      let c = 0, d = 0;
+      while (c < creditors.length && d < debtors.length) {
+        const amount = Math.min(creditors[c].amount, debtors[d].amount);
+        settlements.push({ from: debtors[d].id, to: creditors[c].id, amount });
+        creditors[c].amount -= amount;
+        debtors[d].amount -= amount;
+        if (creditors[c].amount <= 0.5) c++;
+        if (debtors[d].amount <= 0.5) d++;
+      }
+      return { totals, settlements };
+    }
+
+    function renderMembers() {
+      const payer = document.getElementById('payer');
+      payer.innerHTML = state.members.map((m) => `<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('');
+
+      const splitters = document.getElementById('splitters');
+      splitters.innerHTML = state.members.map((m) => `
+        <label class="flex items-center gap-3 rounded-2xl bg-foam px-4 py-3 font-bold">
+          <input type="checkbox" class="splitter h-5 w-5 accent-fuji" value="${m.id}" checked />
+          <span>${escapeHtml(m.name)}</span>
+        </label>
+      `).join('');
+
+      document.getElementById('membersList').innerHTML = state.members.map((m) => `
+        <div class="flex items-center justify-between rounded-2xl bg-foam px-4 py-3">
+          <span class="font-bold">${escapeHtml(m.name)}</span>
+          <button class="delete-member text-sm font-black text-red-500" data-id="${m.id}" type="button">刪除</button>
+        </div>
+      `).join('');
+    }
+
+    function renderSummary() {
+      const { totals, settlements } = calculate();
+      const total = state.expenses.reduce((sum, e) => sum + convertedAmount(e), 0);
+      document.getElementById('totalAmount').textContent = money(total);
+      document.getElementById('memberCount').textContent = `${state.members.length} 人`;
+      document.getElementById('expenseCount').textContent = `${state.expenses.length} 筆`;
+
+      document.getElementById('balances').innerHTML = state.members.map((m) => {
+        const item = totals[m.id] || { paid: 0, share: 0, net: 0 };
+        const tone = item.net >= 0 ? 'text-fuji bg-sea/70' : 'text-red-600 bg-red-50';
+        return `
+          <div class="rounded-2xl bg-foam p-4">
+            <div class="flex items-center justify-between gap-3">
+              <p class="font-black">${escapeHtml(m.name)}</p>
+              <p class="rounded-full px-3 py-1 text-sm font-black ${tone}">${item.net >= 0 ? '+' : '-'}${money(Math.abs(item.net))}</p>
+            </div>
+            <p class="mt-2 text-sm text-slate-500">已付 ${money(item.paid)} · 應分攤 ${money(item.share)}</p>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('settlements').innerHTML = settlements.length
+        ? settlements.map((s) => `
+          <div class="rounded-2xl bg-foam p-4">
+            <p class="font-black">${escapeHtml(byId(s.from)?.name || '未知')} <i class="fa-solid fa-arrow-right mx-2 text-fuji"></i> ${escapeHtml(byId(s.to)?.name || '未知')}</p>
+            <p class="mt-1 text-2xl font-black text-fuji">${money(s.amount)}</p>
+          </div>
+        `).join('')
+        : '<div class="rounded-2xl bg-foam p-4 text-sm text-slate-500">目前沒有需要結算的款項。</div>';
+    }
+
+    function renderRecords() {
+      const records = [...state.expenses].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      document.getElementById('recordsList').innerHTML = records.length
+        ? records.map((e) => {
+          const splitNames = (e.splitterIds || []).map((id) => byId(id)?.name).filter(Boolean).join('、');
+          return `
+            <article class="rounded-[22px] bg-foam p-4">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="text-xs font-bold text-fuji">${escapeHtml(e.date || '')} · ${escapeHtml(e.category || '')}</p>
+                  <h3 class="mt-1 text-lg font-black">${escapeHtml(e.title)}</h3>
+                  <p class="mt-1 text-sm text-slate-500">付款：${escapeHtml(byId(e.payerId)?.name || '未知')} · 分攤：${escapeHtml(splitNames || '無')}</p>
+                </div>
+                <button class="delete-expense shrink-0 rounded-full bg-white px-3 py-1 text-xs font-black text-red-500" data-id="${e.id}" type="button">刪除</button>
+              </div>
+              <p class="mt-3 text-2xl font-black text-fuji">${money(convertedAmount(e))}</p>
+              <p class="text-xs text-slate-500">${fmt.format(e.amount)} ${e.currency} · 匯率 ${e.rate}</p>
+              ${e.note ? `<p class="mt-2 rounded-xl bg-white p-3 text-sm text-slate-600">${escapeHtml(e.note)}</p>` : ''}
+            </article>
+          `;
+        }).join('')
+        : '<div class="rounded-2xl bg-foam p-4 text-sm text-slate-500">還沒有支出紀錄。</div>';
+    }
+
+    function renderAll() {
+      renderMembers();
+      renderSummary();
+      renderRecords();
+      saveState();
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      })[char]);
+    }
+
+    document.getElementById('expenseDate').valueAsDate = new Date();
+    document.getElementById('currency').addEventListener('change', (event) => {
+      const selected = event.target.selectedOptions[0];
+      document.getElementById('rate').value = selected.dataset.rate || '1';
+    });
+
+    document.getElementById('selectAllSplitters').addEventListener('click', () => {
+      document.querySelectorAll('.splitter').forEach((box) => box.checked = true);
+    });
+
+    document.getElementById('expenseForm').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const splitterIds = [...document.querySelectorAll('.splitter:checked')].map((box) => box.value);
+      if (!splitterIds.length) {
+        alert('請至少選一位分攤對象');
+        return;
+      }
+      const currency = document.getElementById('currency').value;
+      state.expenses.push({
+        id: crypto.randomUUID(),
+        date: document.getElementById('expenseDate').value,
+        title: document.getElementById('title').value.trim(),
+        category: document.getElementById('category').value,
+        amount: Number(document.getElementById('amount').value),
+        currency,
+        rate: Number(document.getElementById('rate').value || 1),
+        payerId: document.getElementById('payer').value,
+        splitterIds,
+        note: document.getElementById('note').value.trim()
+      });
+      event.target.reset();
+      document.getElementById('expenseDate').valueAsDate = new Date();
+      document.getElementById('rate').value = '1';
+      renderAll();
+    });
+
+    document.getElementById('memberForm').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const name = document.getElementById('memberName').value.trim();
+      if (!name) return;
+      state.members.push({ id: crypto.randomUUID(), name });
+      document.getElementById('memberName').value = '';
+      renderAll();
+    });
+
+    document.addEventListener('click', (event) => {
+      const expenseBtn = event.target.closest('.delete-expense');
+      if (expenseBtn) {
+        state.expenses = state.expenses.filter((e) => e.id !== expenseBtn.dataset.id);
+        renderAll();
+      }
+      const memberBtn = event.target.closest('.delete-member');
+      if (memberBtn) {
+        if (state.members.length <= 1) return alert('至少保留一位成員');
+        const id = memberBtn.dataset.id;
+        const used = state.expenses.some((e) => e.payerId === id || e.splitterIds?.includes(id));
+        if (used) return alert('這位成員已有分帳紀錄，請先刪除相關支出');
+        state.members = state.members.filter((m) => m.id !== id);
+        renderAll();
+      }
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'busan-expenses-backup.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('importFile').addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const imported = JSON.parse(await file.text());
+      if (!imported.members || !imported.expenses) return alert('檔案格式不正確');
+      state = imported;
+      renderAll();
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      if (!confirm('確定要清空本機分帳資料嗎？')) return;
+      state = structuredClone(defaultState);
+      renderAll();
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>
